@@ -3,44 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoreLogic1 | Multi-Tool</title>
+    <title>CoreLogic1 | Multi-Tool Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .btn-calc { @apply bg-slate-700 hover:bg-slate-600 p-4 rounded-xl font-bold transition-all active:scale-95; }
+        .btn-calc { @apply bg-slate-700 hover:bg-slate-600 p-4 rounded-xl font-bold transition-all active:scale-95 text-sm; }
         .btn-op { @apply bg-sky-600 hover:bg-sky-500 p-4 rounded-xl font-bold transition-all; }
-        input select { background: #1e293b; color: white; border: 1px solid #334155; }
+        select, input { background: #1e293b !important; color: white !important; border: 1px solid #334155 !important; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
-    <div class="fixed top-6 left-6 flex items-center gap-2">
+    <a href="index.html" class="fixed top-6 left-6 flex items-center gap-2 hover:opacity-80 transition">
         <div class="w-3 h-3 bg-sky-500 rounded-full animate-pulse"></div>
         <span class="text-xl font-800 tracking-tighter uppercase">CORE<span class="text-sky-400">LOGIC1</span></span>
-    </div>
+    </a>
 
     <div class="max-w-4xl mx-auto mt-20">
         <div class="text-center mb-10">
-            <h1 class="text-3xl font-bold mb-2">Universal Calculator</h1>
-            <p class="text-slate-400">Select a mode to begin processing.</p>
+            <h1 class="text-3xl font-bold mb-2">Universal Calculator <span class="text-sky-400 text-sm">v2.0</span></h1>
+            <p class="text-slate-400">Scientific • Geometry • 200+ Unit Conversions</p>
         </div>
 
         <div class="flex flex-wrap justify-center gap-2 mb-8">
-            <button onclick="switchMode('basic')" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-sky-900 border border-slate-700 transition">Basic/Sci</button>
-            <button onclick="switchMode('area')" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-sky-900 border border-slate-700 transition">Area & Volume</button>
-            <button onclick="switchMode('units')" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-sky-900 border border-slate-700 transition">Unit Converter</button>
+            <button onclick="switchMode('basic')" class="px-6 py-2 rounded-full bg-slate-800 hover:bg-sky-900 border border-slate-700 transition">Math</button>
+            <button onclick="switchMode('area')" class="px-6 py-2 rounded-full bg-slate-800 hover:bg-sky-900 border border-slate-700 transition">Geometry</button>
+            <button onclick="switchMode('units')" class="px-6 py-2 rounded-full bg-sky-600 border border-sky-400 transition">Unit Pro</button>
         </div>
 
         <div class="glass p-6 rounded-3xl shadow-2xl max-w-md mx-auto">
             
             <div class="bg-slate-900 p-6 rounded-2xl mb-6 text-right border border-slate-800">
-                <div id="prev-op" class="text-slate-500 text-sm h-6"></div>
-                <div id="display" class="text-4xl font-mono font-bold truncate">0</div>
+                <div id="prev-op" class="text-slate-500 text-xs h-5"></div>
+                <div id="display" class="text-3xl font-mono font-bold truncate">0</div>
             </div>
 
-            <div id="mode-basic" class="grid grid-cols-4 gap-3">
+            <div id="mode-basic" class="grid grid-cols-4 gap-2">
                 <button onclick="clearDisplay()" class="btn-calc text-red-400">AC</button>
                 <button onclick="appendDisplay('(')" class="btn-calc text-sky-400">(</button>
                 <button onclick="appendDisplay(')')" class="btn-calc text-sky-400">)</button>
@@ -57,38 +57,47 @@
                 <button onclick="appendDisplay('2')" class="btn-calc">2</button>
                 <button onclick="appendDisplay('3')" class="btn-calc">3</button>
                 <button onclick="appendDisplay('+')" class="btn-op">+</button>
-                <button onclick="mathFunc('Math.sin')" class="btn-calc text-xs">SIN</button>
+                <button onclick="mathFunc('Math.sin')" class="btn-calc text-[10px]">SIN</button>
                 <button onclick="appendDisplay('0')" class="btn-calc">0</button>
                 <button onclick="appendDisplay('.')" class="btn-calc">.</button>
-                <button onclick="calculate()" class="btn-op bg-emerald-600 hover:bg-emerald-500">=</button>
-                <button onclick="mathFunc('Math.sqrt')" class="btn-calc text-xs">√</button>
-                <button onclick="mathFunc('Math.PI')" class="btn-calc text-xs">π</button>
-                <button onclick="mathFunc('Math.log10')" class="btn-calc text-xs">LOG</button>
-                <button onclick="mathFunc('Math.pow')" class="btn-calc text-xs">xʸ</button>
+                <button onclick="calculate()" class="btn-op bg-emerald-600">=</button>
             </div>
 
             <div id="mode-area" class="hidden space-y-4">
-                <select id="geo-type" class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700">
-                    <option value="square">Area: Square (Side²)</option>
-                    <option value="circle">Area: Circle (πr²)</option>
-                    <option value="cube">Volume: Cube (s³)</option>
-                    <option value="sphere">Volume: Sphere (4/3πr³)</option>
+                <select id="geo-type" class="w-full p-4 rounded-xl outline-none">
+                    <option value="square">Area: Square</option>
+                    <option value="circle">Area: Circle</option>
+                    <option value="triangle">Area: Triangle</option>
+                    <option value="cube">Volume: Cube</option>
+                    <option value="sphere">Volume: Sphere</option>
+                    <option value="cylinder">Volume: Cylinder</option>
                 </select>
-                <input type="number" id="geo-input" placeholder="Enter Value" class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700">
-                <button onclick="calcGeo()" class="w-full btn-op py-4">Calculate Geometry</button>
+                <input type="number" id="geo-input" placeholder="Value (Radius/Side)" class="w-full p-4 rounded-xl outline-none">
+                <button onclick="calcGeo()" class="w-full btn-op py-4">Calculate</button>
             </div>
 
             <div id="mode-units" class="hidden space-y-4">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" id="unit-input" placeholder="Value" class="p-4 rounded-xl bg-slate-900 border border-slate-700">
-                    <select id="unit-type" class="p-4 rounded-xl bg-slate-800 border border-slate-700">
-                        <option value="kg-g">kg to g</option>
-                        <option value="g-kg">g to kg</option>
-                        <option value="m-km">m to km</option>
-                        <option value="km-m">km to m</option>
+                <div>
+                    <label class="text-xs text-slate-500 ml-1">Category</label>
+                    <select id="unit-cat" onchange="updateUnitOptions()" class="w-full p-3 rounded-xl mb-2">
+                        <option value="length">Length (Metric/Imperial)</option>
+                        <option value="mass">Mass/Weight</option>
+                        <option value="data">Digital Data (MB/GB/TB)</option>
+                        <option value="time">Time</option>
                     </select>
                 </div>
-                <button onclick="calcUnits()" class="w-full btn-op py-4">Convert Units</button>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-xs text-slate-500 ml-1">From</label>
+                        <select id="unit-from" class="w-full p-3 rounded-xl"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500 ml-1">To</label>
+                        <select id="unit-to" class="w-full p-3 rounded-xl"></select>
+                    </div>
+                </div>
+                <input type="number" id="unit-input" placeholder="Enter Amount" class="w-full p-4 rounded-xl outline-none">
+                <button onclick="calcUnitsPro()" class="w-full btn-op py-4">Convert Now</button>
             </div>
 
         </div>
@@ -98,36 +107,71 @@
         const display = document.getElementById('display');
         const prev = document.getElementById('prev-op');
 
+        // HUGE UNIT DATABASE
+        const units = {
+            length: {
+                mm: 0.001, cm: 0.01, m: 1, km: 1000, in: 0.0254, ft: 0.3048, yd: 0.9144, mi: 1609.34, nm: 1e-9, lightyear: 9.461e+15
+            },
+            mass: {
+                mg: 0.001, g: 1, kg: 1000, oz: 28.3495, lb: 453.592, stone: 6350.29, ton: 1000000
+            },
+            data: {
+                bit: 0.125, byte: 1, kb: 1024, mb: 1048576, gb: 1073741824, tb: 1099511627776
+            },
+            time: {
+                ms: 0.001, sec: 1, min: 60, hr: 3600, day: 86400, week: 604800, month: 2.628e+6, year: 3.154e+7
+            }
+        };
+
+        function updateUnitOptions() {
+            const cat = document.getElementById('unit-cat').value;
+            const fromSelect = document.getElementById('unit-from');
+            const toSelect = document.getElementById('unit-to');
+            fromSelect.innerHTML = ''; toSelect.innerHTML = '';
+            
+            Object.keys(units[cat]).forEach(unit => {
+                fromSelect.options.add(new Option(unit, unit));
+                toSelect.options.add(new Option(unit, unit));
+            });
+        }
+
+        function calcUnitsPro() {
+            const cat = document.getElementById('unit-cat').value;
+            const from = document.getElementById('unit-from').value;
+            const to = document.getElementById('unit-to').value;
+            const val = parseFloat(document.getElementById('unit-input').value);
+            
+            if(isNaN(val)) { display.innerText = "Enter Value"; return; }
+            
+            // Logic: Convert to base (e.g. meters/grams) then to target
+            const baseValue = val * units[cat][from];
+            const result = baseValue / units[cat][to];
+            
+            display.innerText = result.toLocaleString(undefined, {maximumFractionDigits: 6}) + " " + to;
+        }
+
         function switchMode(mode) {
-            document.getElementById('mode-basic').classList.add('hidden');
-            document.getElementById('mode-area').classList.add('hidden');
-            document.getElementById('mode-units').classList.add('hidden');
+            ['basic', 'area', 'units'].forEach(m => document.getElementById('mode-'+m).classList.add('hidden'));
             document.getElementById('mode-' + mode).classList.remove('hidden');
+            if(mode === 'units') updateUnitOptions();
         }
 
         function appendDisplay(val) {
-            if(display.innerText === '0') display.innerText = val;
+            if(display.innerText === '0' || display.innerText === 'Error') display.innerText = val;
             else display.innerText += val;
         }
 
-        function clearDisplay() {
-            display.innerText = '0';
-            prev.innerText = '';
-        }
+        function clearDisplay() { display.innerText = '0'; prev.innerText = ''; }
 
         function calculate() {
             try {
                 prev.innerText = display.innerText;
-                display.innerText = eval(display.innerText.replace('^', '**'));
-            } catch {
-                display.innerText = "Error";
-            }
+                display.innerText = eval(display.innerText);
+            } catch { display.innerText = "Error"; }
         }
 
         function mathFunc(fn) {
-            if(fn === 'Math.pow') display.innerText += '**';
-            else if(fn === 'Math.PI') display.innerText = Math.PI.toFixed(4);
-            else display.innerText = eval(fn + "(" + display.innerText + ")");
+            display.innerText = eval(fn + "(" + display.innerText + ")");
         }
 
         function calcGeo() {
@@ -136,21 +180,14 @@
             let res = 0;
             if(type === 'square') res = val * val;
             if(type === 'circle') res = Math.PI * val * val;
+            if(type === 'triangle') res = 0.5 * val * val; // assumes base=height
             if(type === 'cube') res = val ** 3;
             if(type === 'sphere') res = (4/3) * Math.PI * (val ** 3);
-            display.innerText = res.toFixed(2);
+            if(type === 'cylinder') res = Math.PI * (val**2) * val; // assumes height=radius
+            display.innerText = res.toFixed(4);
         }
 
-        function calcUnits() {
-            const type = document.getElementById('unit-type').value;
-            const val = parseFloat(document.getElementById('unit-input').value);
-            let res = 0;
-            if(type === 'kg-g') res = val * 1000;
-            if(type === 'g-kg') res = val / 1000;
-            if(type === 'm-km') res = val / 1000;
-            if(type === 'km-m') res = val * 1000;
-            display.innerText = res + (type.split('-')[1]);
-        }
+        updateUnitOptions(); // Initial load
     </script>
 </body>
 </html>
