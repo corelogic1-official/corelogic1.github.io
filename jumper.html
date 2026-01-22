@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CoreLogic | Logic Leap</title>
+    <style>
+        body { background: #020617; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; font-family: sans-serif; }
+        canvas { background: #0f172a; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <canvas id="jumpCanvas" width="400" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('jumpCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 200, y: 550, v: 0, size: 20 };
+        let platforms = []; let score = 0; let camY = 0;
+
+        for(let i=0; i<7; i++) platforms.push({x: Math.random()*300, y: i*100, w: 80, h: 10});
+
+        function update() {
+            ctx.clearRect(0,0,400,600);
+            player.v += 0.3; player.y += player.v;
+            
+            if(player.y < 300) {
+                let diff = 300 - player.y;
+                player.y = 300;
+                platforms.forEach(p => { p.y += diff; if(p.y > 600) { p.y = 0; p.x = Math.random()*300; score++; } });
+            }
+
+            ctx.fillStyle = '#38bdf8'; ctx.fillRect(player.x, player.y, player.size, player.size);
+            ctx.fillStyle = '#f0f';
+            platforms.forEach(p => {
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if(player.v > 0 && player.x < p.x + p.w && player.x + player.size > p.x && player.y + player.size > p.y && player.y + player.size < p.y + p.h + 10) player.v = -10;
+            });
+
+            if(player.y > 600) location.reload();
+            ctx.fillStyle = "white"; ctx.fillText("Height: " + score, 20, 20);
+            requestAnimationFrame(update);
+        }
+        window.addEventListener('mousemove', e => player.x = e.clientX - canvas.offsetLeft - 10);
+        update();
+    </script>
+</body>
+</html>
