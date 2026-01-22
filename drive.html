@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CoreLogic | Neon Driver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }</style>
+</head>
+<body>
+    <canvas id="driveCanvas" width="400" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('driveCanvas');
+        const ctx = canvas.getContext('2d');
+        let car = { x: 180, y: 500, w: 40, h: 70 };
+        let enemies = []; let score = 0; let keys = {};
+
+        function draw() {
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,400,600);
+            ctx.strokeStyle = '#f0f'; ctx.lineWidth = 5;
+            ctx.strokeRect(10, -10, 380, 620); // Road edges
+
+            if(keys['ArrowLeft'] && car.x > 20) car.x -= 5;
+            if(keys['ArrowRight'] && car.x < 340) car.x += 5;
+
+            ctx.fillStyle = '#00ffff'; ctx.fillRect(car.x, car.y, car.w, car.h);
+
+            if(Math.random() < 0.02) enemies.push({x: Math.random()*340+20, y: -100, w: 40, h: 70});
+            enemies.forEach((e, i) => {
+                e.y += 5; ctx.fillStyle = '#ff0055'; ctx.fillRect(e.x, e.y, e.w, e.h);
+                if(e.y > 600) { enemies.splice(i,1); score++; }
+                if(car.x < e.x + e.w && car.x + car.w > e.x && car.y < e.y + e.h && car.y + car.h > e.y) location.reload();
+            });
+            ctx.fillStyle = "white"; ctx.fillText("Score: " + score, 20, 30);
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+        draw();
+    </script>
+</body>
+</html>
