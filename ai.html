@@ -3,122 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoreLogic1 | Neural Vision AI</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/models/mobilenet"></script>
+    <title>CoreLogic1 | Neural Vision HUD</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #020617; font-family: 'Inter', sans-serif; color: white; }
-        .scanner-line {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+        body { background-color: #020617; font-family: 'Space Mono', monospace; color: white; overflow-x: hidden; }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 4/3;
+            overflow: hidden;
+            border: 2px solid #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        /* The Scanning HUD Overlay */
+        .hud-corner { position: absolute; width: 30px; height: 30px; border: 4px solid #38bdf8; }
+        .top-left { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+        .top-right { top: 10px; right: 10px; border-left: 0; border-bottom: 0; }
+        .bottom-left { bottom: 10px; left: 10px; border-right: 0; border-top: 0; }
+        .bottom-right { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+        .scan-bar {
             position: absolute;
             width: 100%;
-            animation: scan 2s linear infinite;
+            height: 4px;
+            background: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 15px #38bdf8;
+            animation: moveScan 3s ease-in-out infinite;
         }
-        @keyframes scan {
-            0% { top: 0%; }
-            100% { top: 100%; }
+
+        @keyframes moveScan {
+            0%, 100% { top: 5%; }
+            50% { top: 95%; }
         }
-        .ai-border { border: 1px solid rgba(56, 189, 248, 0.2); }
+
+        .glitch-text { animation: glitch 1s linear infinite; }
+        @keyframes glitch {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; transform: translateX(1px); }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="p-4 flex flex-col items-center justify-center min-h-screen">
 
-    <a href="index.html" class="fixed top-6 left-6 flex items-center gap-2 z-50">
-        <div class="w-3 h-3 bg-sky-500 rounded-full animate-ping"></div>
-        <span class="text-xl font-black tracking-tighter uppercase">CORE<span class="text-sky-400">LOGIC1</span> AI</span>
-    </a>
+    <div class="fixed top-6 left-6 z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            <span class="text-xl font-bold tracking-tighter uppercase text-white">CORE<span class="text-sky-400">LOGIC1</span> <span class="text-xs border border-sky-400 px-1 ml-1">V.2.0</span></span>
+        </div>
+        <p id="ai-status" class="text-[10px] text-sky-500 mt-1 uppercase tracking-widest">System: Booting...</p>
+    </div>
 
-    <div class="max-w-4xl mx-auto mt-16 text-center">
-        <h1 class="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight">Neural <span class="text-sky-400">Object Vision</span></h1>
-        <p class="text-slate-400 mb-10">Upload any image and let the CoreLogic1 Neural Network classify it in real-time.</p>
-
-        <div class="relative group bg-slate-900 rounded-3xl p-8 ai-border overflow-hidden">
-            <div id="scanner" class="hidden scanner-line"></div>
+    <div class="max-w-4xl w-full flex flex-col md:flex-row gap-8 items-center">
+        
+        <div class="video-container rounded-lg bg-black">
+            <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover grayscale brightness-125 contrast-125"></video>
+            <div class="hud-corner top-left"></div>
+            <div class="hud-corner top-right"></div>
+            <div class="hud-corner bottom-left"></div>
+            <div class="hud-corner bottom-right"></div>
+            <div class="scan-bar"></div>
             
-            <div class="mb-6 flex justify-center">
-                <img id="img-preview" src="https://via.placeholder.com/400x300/1e293b/38bdf8?text=Upload+Image+to+Scan" class="rounded-2xl max-h-[400px] shadow-2xl transition-all duration-500">
-            </div>
-
-            <div class="flex flex-col items-center gap-4">
-                <input type="file" id="file-upload" accept="image/*" class="hidden">
-                <label for="file-upload" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-8 py-4 rounded-xl cursor-pointer transition-all active:scale-95">
-                    SELECT IMAGE SOURCE
-                </label>
-                
-                <div id="ai-status" class="text-xs uppercase tracking-widest text-slate-500">AI Engine: Standby</div>
+            <div class="absolute bottom-4 left-4 bg-sky-500/20 backdrop-blur-md p-2 border border-sky-500/50 text-[10px]">
+                COORD: <span id="coords">0.00, 0.00</span><br>
+                FPS: <span id="fps">60</span>
             </div>
         </div>
 
-        <div id="result-container" class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+        <div class="w-full md:w-80 space-y-4">
+            <h2 class="text-sky-400 font-bold text-sm tracking-widest">NEURAL FEED_</h2>
+            <div id="results" class="space-y-4">
+                <div class="animate-pulse bg-slate-900 border border-slate-800 p-4 h-24 rounded-lg"></div>
+                <div class="animate-pulse bg-slate-900 border border-slate-800 p-4 h-24 rounded-lg"></div>
             </div>
+            
+            <button id="toggle-cam" class="w-full py-3 border border-sky-500 text-sky-500 hover:bg-sky-500 hover:text-black transition-all font-bold text-xs">
+                TOGGLE SENSOR
+            </button>
+        </div>
     </div>
 
     <script>
-        let model;
-        const imgPreview = document.getElementById('img-preview');
-        const fileUpload = document.getElementById('file-upload');
+        const video = document.getElementById('webcam');
         const status = document.getElementById('ai-status');
-        const scanner = document.getElementById('scanner');
-        const resultContainer = document.getElementById('result-container');
+        const resultsDiv = document.getElementById('results');
+        let model;
 
-        // Load the MobileNet AI Model
-        async function loadModel() {
-            status.innerText = "Initializing Neural Network...";
-            model = await mobilenet.load();
-            status.innerText = "AI Engine: Online";
-        }
-
-        fileUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (f) => {
-                    imgPreview.src = f.target.result;
-                    imgPreview.onload = () => runAI();
-                };
-                reader.readAsDataURL(file);
+        // Initialize Camera
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => resolve(video);
+                });
+            } catch (err) {
+                status.innerText = "Error: Camera Access Denied";
+                status.classList.add('text-red-500');
             }
-        });
+        }
 
-        async function runAI() {
-            if (!model) return;
+        // Initialize AI
+        async function init() {
+            status.innerText = "System: Loading Neural Weights...";
+            model = await mobilenet.load();
+            status.innerText = "System: AI Engine Online";
+            await setupCamera();
+            predict();
+        }
+
+        async function predict() {
+            // Classify the video frame
+            const predictions = await model.classify(video);
             
-            scanner.classList.remove('hidden');
-            status.innerText = "Analyzing Pixels...";
-            resultContainer.classList.add('hidden');
-
-            // Give AI a moment to "think" (visual effect)
-            setTimeout(async () => {
-                const predictions = await model.classify(imgPreview);
-                displayResults(predictions);
-                scanner.classList.add('hidden');
-                status.innerText = "Analysis Complete";
-            }, 1000);
-        }
-
-        function displayResults(predictions) {
-            resultContainer.innerHTML = '';
-            resultContainer.classList.remove('hidden');
-
-            predictions.forEach(p => {
-                const confidence = Math.round(p.probability * 100);
+            // Update UI
+            resultsDiv.innerHTML = '';
+            predictions.forEach((p, i) => {
+                const prob = Math.round(p.probability * 100);
                 const div = document.createElement('div');
-                div.className = "bg-slate-800/50 p-6 rounded-2xl border border-sky-500/30 text-left";
+                div.className = `p-4 border border-sky-500/30 bg-sky-500/${i === 0 ? '20' : '5'} rounded-lg transition-all`;
                 div.innerHTML = `
-                    <p class="text-xs text-sky-400 uppercase font-bold mb-1">Object Prediction</p>
-                    <h3 class="text-lg font-bold capitalize">${p.className.split(',')[0]}</h3>
-                    <div class="w-full bg-slate-700 h-1.5 mt-4 rounded-full">
-                        <div class="bg-sky-400 h-1.5 rounded-full" style="width: ${confidence}%"></div>
+                    <div class="flex justify-between text-[10px] mb-1">
+                        <span class="text-sky-400 font-bold">OBJ_${i+1}</span>
+                        <span>${prob}% MATCH</span>
                     </div>
-                    <p class="text-right text-[10px] mt-1 text-slate-500">${confidence}% Match</p>
+                    <div class="text-lg font-bold uppercase ${i === 0 ? 'glitch-text' : ''}">${p.className.split(',')[0]}</div>
+                    <div class="w-full bg-slate-800 h-1 mt-2">
+                        <div class="bg-sky-400 h-full" style="width: ${prob}%"></div>
+                    </div>
                 `;
-                resultContainer.appendChild(div);
+                resultsDiv.appendChild(div);
             });
+
+            // Update Coords (fake movement effect)
+            document.getElementById('coords').innerText = `${(Math.random()*100).toFixed(2)}, ${(Math.random()*100).toFixed(2)}`;
+
+            requestAnimationFrame(predict);
         }
 
-        loadModel();
+        init();
     </script>
 </body>
 </html>
