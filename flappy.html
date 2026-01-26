@@ -1,49 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>CoreLogic | Cyber Bird</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Bird | CoreLogic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0f172a; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Inter', sans-serif; }
-        canvas { border: 4px solid #38bdf8; border-radius: 20px; box-shadow: 0 0 20px #38bdf8; background: #020617; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020617; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Orbitron', sans-serif; }
+        canvas { border: 2px solid #0ea5e9; border-radius: 12px; box-shadow: 0 0 30px rgba(14, 165, 233, 0.3); background: #000; cursor: pointer; }
+        .ui-layer { pointer-events: none; text-shadow: 0 0 10px #0ea5e9; }
     </style>
 </head>
 <body>
-    <div class="absolute top-10 text-white text-center">
-        <h1 class="text-2xl font-black uppercase">Cyber Bird</h1>
-        <p class="text-sky-400">Space or Click to Jump</p>
+    <div class="absolute inset-0 flex flex-col items-center justify-center ui-layer z-10">
+        <div id="startScreen" class="text-center">
+            <h1 class="text-5xl font-black text-white italic tracking-tighter mb-2">CYBER <span class="text-sky-500">BIRD</span></h1>
+            <p class="text-sky-300 animate-pulse">PRESS SPACE OR TAP TO START</p>
+        </div>
+        <div id="scoreDisplay" class="absolute top-10 text-5xl font-bold text-white opacity-20">0</div>
     </div>
+
     <canvas id="gameCanvas" width="400" height="600"></canvas>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        let bird = { x: 50, y: 300, v: 0, gravity: 0.6, jump: -8, size: 20 };
-        let pipes = []; let score = 0; let frame = 0;
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const startScreen = document.getElementById('startScreen');
+
+        let gameState = 'START'; // START, PLAYING, GAMEOVER
+        let bird = { x: 80, y: 300, v: 0, gravity: 0.4, jump: -7, size: 24, rotation: 0 };
+        let pipes = [];
+        let particles = [];
+        let score = 0;
+        let frame = 0;
+        let highScore = localStorage.getItem('cyberBirdHS') || 0;
+
+        function createParticles(x, y, color) {
+            for(let i=0; i<8; i++) {
+                particles.push({
+                    x, y, 
+                    xv: (Math.random()-0.5)*10, 
+                    yv: (Math.random()-0.5)*10, 
+                    life: 1, 
+                    color
+                });
+            }
+        }
+
+        function resetGame() {
+            bird.y = 300; bird.v = 0; bird.rotation = 0;
+            pipes = []; score = 0; frame = 0;
+            scoreDisplay.innerText = "0";
+            gameState = 'PLAYING';
+            startScreen.classList.add('hidden');
+        }
 
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            bird.v += bird.gravity; bird.y += bird.v;
-            ctx.fillStyle = '#38bdf8'; ctx.shadowBlur = 15; ctx.shadowColor = '#38bdf8';
-            ctx.fillRect(bird.x, bird.y, bird.size, bird.size);
+            // Background Glow
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            if (frame % 90 === 0) {
-                let h = Math.random() * (canvas.height - 200) + 50;
-                pipes.push({ x: canvas.width, y: h, w: 50, gap: 150 });
+            if (gameState === 'PLAYING') {
+                bird.v += bird.gravity;
+                bird.y += bird.v;
+                bird.rotation = Math.min(Math.PI/4, Math.max(-Math.PI/4, bird.v * 0.1));
+
+                if (frame % 100 === 0) {
+                    let gap = 170;
+                    let minH = 50;
+                    let h = Math.random() * (canvas.height - gap - (minH * 2)) + minH;
+                    pipes.push({ x: canvas.width, y: h, w: 60, gap: gap, passed: false });
+                }
             }
-            
+
+            // Draw Pipes
             pipes.forEach((p, i) => {
-                p.x -= 3;
-                ctx.fillStyle = '#1e293b'; ctx.fillRect(p.x, 0, p.w, p.y);
+                if(gameState === 'PLAYING') p.x -= 3.5;
+                
+                let grad = ctx.createLinearGradient(p.x, 0, p.x + p.w, 0);
+                grad.addColorStop(0, '#0f172a');
+                grad.addColorStop(0.5, '#334155');
+                grad.addColorStop(1, '#0f172a');
+                
+                ctx.fillStyle = grad;
+                ctx.strokeStyle = '#0ea5e9';
+                ctx.lineWidth = 2;
+
+                // Top Pipe
+                ctx.fillRect(p.x, 0, p.w, p.y);
+                ctx.strokeRect(p.x, -5, p.w, p.y + 5);
+                // Bottom Pipe
                 ctx.fillRect(p.x, p.y + p.gap, p.w, canvas.height);
-                if (bird.x < p.x + p.w && bird.x + bird.size > p.x && (bird.y < p.y || bird.y + bird.size > p.y + p.gap)) location.reload();
-                if (p.x === 50) score++;
+                ctx.strokeRect(p.x, p.y + p.gap, p.w, canvas.height);
+
+                // Score detection
+                if (!p.passed && bird.x > p.x + p.w) {
+                    score++;
+                    p.passed = true;
+                    scoreDisplay.innerText = score;
+                    scoreDisplay.classList.remove('opacity-20');
+                }
+
+                // Collision
+                if (bird.x + bird.size > p.x && bird.x < p.x + p.w) {
+                    if (bird.y < p.y || bird.y + bird.size > p.y + p.gap) gameOver();
+                }
             });
-            if (bird.y > canvas.height || bird.y < 0) location.reload();
-            ctx.fillStyle = "white"; ctx.font = "30px Arial"; ctx.fillText(score, 20, 50);
-            frame++; requestAnimationFrame(draw);
+
+            // Cleanup pipes
+            if(pipes.length > 0 && pipes[0].x < -100) pipes.shift();
+
+            // Draw Particles
+            particles.forEach((p, i) => {
+                p.x += p.xv; p.y += p.yv; p.life -= 0.02;
+                ctx.fillStyle = `rgba(14, 165, 233, ${p.life})`;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                if(p.life <= 0) particles.splice(i, 1);
+            });
+
+            // Draw Bird
+            ctx.save();
+            ctx.translate(bird.x + bird.size/2, bird.y + bird.size/2);
+            ctx.rotate(bird.rotation);
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#0ea5e9';
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(-bird.size/2, -bird.size/2, bird.size, bird.size);
+            // Eye
+            ctx.fillStyle = '#0ea5e9';
+            ctx.fillRect(2, -8, 6, 6);
+            ctx.restore();
+
+            if (bird.y > canvas.height || bird.y < -50) gameOver();
+
+            frame++;
+            requestAnimationFrame(draw);
         }
-        window.addEventListener('keydown', e => { if(e.code==='Space') bird.v = bird.jump; });
-        canvas.addEventListener('mousedown', () => bird.v = bird.jump);
+
+        function gameOver() {
+            if(gameState === 'PLAYING') {
+                createParticles(bird.x, bird.y, '#0ea5e9');
+                gameState = 'START';
+                startScreen.classList.remove('hidden');
+                if(score > highScore) localStorage.setItem('cyberBirdHS', score);
+            }
+        }
+
+        function jump() {
+            if (gameState === 'START') {
+                resetGame();
+            } else {
+                bird.v = bird.jump;
+                createParticles(bird.x, bird.y + bird.size, '#38bdf8');
+            }
+        }
+
+        window.addEventListener('keydown', e => { if(e.code === 'Space') jump(); });
+        canvas.addEventListener('mousedown', jump);
+        
         draw();
     </script>
 </body>
